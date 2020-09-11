@@ -4,7 +4,7 @@ homepage = "https://github.com/panr/hugo-theme-hello-friend/"
 license = "MIT"
 licenselink = "https://github.com/panr/hugo-theme-hello-friend/blob/master/LICENSE.md"
 min_version = 0.74
-name = "hello-friend"
+name = "friend"
 tags = [
   "blog",
   "clean",
