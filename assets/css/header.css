@@ -21,7 +21,8 @@
     align-items: center;
     justify-content: space-between;
     margin: 0 auto;
-    width: 760px;
+    width: 1200px;
+    padding: 0 20px;
     max-width: 100%;
   }
 }
