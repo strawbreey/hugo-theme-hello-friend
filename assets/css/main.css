@@ -236,6 +236,7 @@ ol ol {
   margin: 50px 0;
 
   @media (--phone) {
+    display: block;
     margin-top: 0;
   }
 }

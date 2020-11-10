@@ -72,6 +72,10 @@ a.read-more:active {
   padding: 0;
   margin: 20px 0;
   font-weight: bold;
+
+  @media (--phone) {
+    margin: 12px 0;
+  }
 }
 
 .code-toolbar {
