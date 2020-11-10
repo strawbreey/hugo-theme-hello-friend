@@ -19,11 +19,17 @@ menuMore && menuMore.addEventListener("click", e => e.stopPropagation());
 
 isMobileMenu();
 
-document.body.addEventListener("click", () => {
+document.body.addEventListener("click", (item) => {
+
   if (!isMobile() && menuMore && !menuMore.classList.contains("hidden")) {
     menuMore.classList.add("hidden");
   } else if (isMobile() && !menu.classList.contains("hidden")) {
     menu.classList.add("hidden");
+  }
+
+  if (isMobile) {
+    console.log('666')
+    console.log(item)
   }
 });
 

@@ -3,6 +3,10 @@
   flex-grow: 0;
   color: var(--color-secondary);
 
+  @media (--phone) {
+    padding: 16px;
+  }
+
   &__inner {
     display: flex;
     align-items: center;
