@@ -1,6 +1,7 @@
 .post {
   width: 100%;
   max-width: 1200px;
+  min-width: 1200px;
   text-align: left;
   padding: 20px;
   margin: 20px auto;
@@ -8,13 +9,12 @@
   @media (--phone) {
     padding: 16px;
     margin: 10px auto;
-
+    min-width: 100%;
   }
 
   @media (--tablet) {
     max-width: 660px;
   }
-
 
   &:not(:last-of-type) {
     border-bottom: 1px solid var(--border-color);

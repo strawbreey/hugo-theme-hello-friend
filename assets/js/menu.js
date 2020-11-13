@@ -28,8 +28,8 @@ document.body.addEventListener("click", (item) => {
   }
 
   if (isMobile) {
-    console.log('666')
-    console.log(item)
+    // console.log('666')
+    // console.log(item)
   }
 });
 
