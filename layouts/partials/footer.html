@@ -19,6 +19,9 @@
 </footer>
 
 <script src="{{ "assets/main.js" | absURL }}"></script>
-<script src="{{ "assets/prism.js" | absURL }}"></script>
+<!-- <script src="{{ "assets/prism.js" | absURL }}"></script> -->
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.3.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
 
 {{- partial "extended_footer.html" . }}
