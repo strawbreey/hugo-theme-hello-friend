@@ -8,7 +8,7 @@
   --border-color: #dcdcdc;
 
   /* variables for js, must be the same as these in @custom-media queries */
-  --phoneWidth: (max-width: 684px);
+  --phoneWidth: (max-width: 765px);
   --tabletWidth: (max-width: 900px);
 }
 
@@ -22,7 +22,7 @@ body.dark-theme {
   --border-color: #a9a9b3;
 }
 
-@custom-media --phone (width < 684px);
+@custom-media --phone (width < 765px);
 @custom-media --tablet (width < 900px);
 
 @define-mixin greater-icon $stroke-width: 3px, $width: .95rem, $height: 100% {

@@ -258,7 +258,7 @@ hr {
   padding: 20px;
   border-radius: 10px;
   border: 1px solid var(--border-color);
-  max-width: 1200px;
+  max-width: 1000px;
 }
 
 blockquote.twitter-tweet {
