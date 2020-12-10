@@ -53,12 +53,9 @@
     {{ end }}
 
     <div class="post-content">
-      {{ if or .Params.Toc $.Site.Params.Toc }}
-        <h2>Table of Contents</h2>
-        <aside class="table-of-contents">{{ .TableOfContents }}</aside>
-      {{ end }}
       {{ .Content }}
     </div>
+    
     {{ if eq .Type $.Site.Params.contentTypeName }}
       {{ if or .NextInSection .PrevInSection }}
         <div class="pagination">
@@ -96,4 +93,12 @@
       {{ end }}
     {{ end }}
   </div>
+
+
+  {{ if or .Params.Toc $.Site.Params.Toc }}
+
+    <aside class="aside table-of-contents">
+      {{ .TableOfContents }}
+    </aside>
+  {{ end }}
 {{ end }}

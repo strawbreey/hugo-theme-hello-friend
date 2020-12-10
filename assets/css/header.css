@@ -9,7 +9,7 @@
   @media (--phone) {
     position: fixed;
     top: 0;
-    /* background: var(--header); */
+    background: var(--white);
     border-bottom: 1px solid var(--header);
     width: 100%;
     z-index: 1000;

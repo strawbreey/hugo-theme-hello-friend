@@ -4,7 +4,7 @@
   min-width: 1000px;
   text-align: left;
   padding: 20px;
-  margin: 20px auto;
+  /* margin: 20px auto; */
 
   @media (--phone) {
     padding: 16px;

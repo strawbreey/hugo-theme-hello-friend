@@ -1,0 +1,15 @@
+.aside {
+  margin-left: 16px;
+  padding-left: 20px;
+  border-left: 1px solid var(--header);
+
+  @media (--phone) {
+    display: none;
+  }
+}
+
+.aside ul {
+  list-style: none;
+  text-align: left;
+  margin: 0;
+}
