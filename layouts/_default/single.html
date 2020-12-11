@@ -94,11 +94,8 @@
     {{ end }}
   </div>
 
-
-  {{ if or .Params.Toc $.Site.Params.Toc }}
-
-    <aside class="aside table-of-contents">
-      {{ .TableOfContents }}
-    </aside>
-  {{ end }}
+  <aside class="aside table-of-contents">
+    {{ partial "toc.html" . }}
+    {{ partial "related.html" . }}
+  </aside>
 {{ end }}
