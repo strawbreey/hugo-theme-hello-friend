@@ -1,0 +1,581 @@
+<div id="gt-container gt-input-focused">
+  <div class="gt-initing">
+    <i class="gt-loader"></i>
+    <p class="gt-initing-text"></p>
+  </div>
+  <div class="gt-no-init" key="no-init">
+    <p>no-found-related</p>
+    <p>please-contact</p>
+    <p>
+      <button id="init-issue" onClick={this.handleIssueCreate} isLoading={isIssueCreating} text="Init Issue"></button>
+    </p>
+    <button class="gt-btn-login" id="gt-btn-login" onClick={this.handleLogin} title="Login with GitHub">Login with GitHub</button>
+  </div>
+</div>
+
+<div class="gt-header" key="header">
+  <img class="gt-header-avatar" src={user.avatar_url} alt={user.login} /> :
+  <a class="gt-avatar-github" onClick={this.handleLogin}>
+    <img class="gt-ico-github" name="github"/>
+  </a>
+  <div class="gt-header-comment">
+    <textarea
+      class="gt-header-textarea hide"
+      value="comment"
+      onChange="this.handleCommentChange"
+      onFocus="this.handleCommentFocus"
+      onBlur="this.handleCommentBlur"
+      onKeyDown="this.handleCommentKeyDown"
+      placeholder="Leave a comment"
+    ></textarea>
+    <div class="gt-header-preview markdown-body hide"> previewHtml</div>
+    <div class="gt-header-controls">
+      <a class="gt-header-controls-tip" href="https://guides.github.com/features/mastering-markdown/" target="_blank">
+        <img class="gt-ico-tip" name="tip" text="Markdown is supported"/>
+      </a>
+      <button
+        getRef={this.getRef}
+        class="gt-btn-public hide"
+        onClick={this.handleCommentCreate}
+        text="Comment"
+        isLoading={isCreating}
+      >Comment</button>
+
+      <button
+        class="gt-btn-preview hide"
+        onClick={this.handleCommentPreview}
+        text="Edit"
+      ></button>
+      <button
+        class="gt-btn-preview hide"
+        onClick={this.handleCommentPreview}
+        text="preview"
+      ></button>
+      <Button class="gt-btn-login hide" onClick={this.handleLogin} text="login-with-github"}>login-with-github</Button>
+    </div>
+  </div>
+</div>
+
+<div class="gt-comments" key="comments">
+  <FlipMove {...flipMoveOptions}>
+    {totalComments.map(c => (
+      <Comment
+        comment={c}
+        key={c.id}
+        user={user}
+        language={language}
+        commentedText={this.i18n.t('commented')}
+        admin={admin}
+        replyCallback={this.reply(c)}
+        likeCallback={c.reactions && c.reactions.viewerHasReacted ? this.unLike.bind(this, c) : this.like.bind(this, c)}
+      />
+    ))}
+  </FlipMove>
+  <p class="gt-comments-null">first-comment-person</p>
+  <div class="gt-comments-controls hide">
+    <button class="gt-btn-loadmore" onClick={this.handleCommentLoad}  text="load-more">load-more</button>
+  </div>
+</div>
+
+<script>
+
+  window.onload = function () {
+    // 监听点击事件
+    const content = document.getElementById("gt-btn-login");
+    content.addEventListener("click",function(){
+      // 执行登录
+      handleLogin()
+    }, false)
+  }
+
+  const queryParse = (search = window.location.search) => {
+    if (!search) return {}
+    const queryString = search[0] === '?' ? search.substring(1) : search
+    const query = {}
+    queryString
+      .split('&')
+      .forEach(queryStr => {
+        const [key, value] = queryStr.split('=')
+        /* istanbul ignore else */
+        if (key) query[decodeURIComponent(key)] = decodeURIComponent(value)
+      })
+    return query
+  }
+
+  const queryStringify = query => {
+    const queryString = Object.keys(query)
+      .map(key => `${key}=${encodeURIComponent(query[key] || '')}`)
+      .join('&')
+    return queryString
+  }
+
+  const fetchGithub = fetch('https://api.github.com')
+    .then(res => res.json())
+    .then(data => {
+      console.log(myJson);
+    });
+
+  const getMetaContent = (name, content) => {
+    /* istanbul ignore next */
+    content || (content = 'content')
+    /* istanbul ignore next */
+    const el = window.document.querySelector(`meta[name='${name}']`)
+    /* istanbul ignore next */
+    return el && el.getAttribute(content)
+  }
+
+  const formatErrorMsg = err => {
+    let msg = 'Error: '
+    if (err.response && err.response.data && err.response.data.message) {
+      msg += `${err.response.data.message}. `
+      err.response.data.errors && (msg += err.response.data.errors.map(e => e.message).join(', '))
+    } else {
+      msg += err.message
+    }
+  }
+
+  const hasClassInParent = (element, ...className) => {
+    /* istanbul ignore next */
+    let yes = false
+    /* istanbul ignore next */
+    if (typeof element.className === 'undefined') return false
+    /* istanbul ignore next */
+    const classes = element.className.split(' ')
+    /* istanbul ignore next */
+    className.forEach((c, i) => {
+      /* istanbul ignore next */
+      yes = yes || (classes.indexOf(c) >= 0)
+    })
+    /* istanbul ignore next */
+    if (yes) return yes
+    /* istanbul ignore next */
+    return element.parentNode && hasClassInParent(element.parentNode, className)
+  }
+
+  const accessToken = () => {
+    return this._accessToke || window.localStorage.getItem(GT_ACCESS_TOKEN)
+  }
+  
+  const accessToken = (token) => {
+    window.localStorage.setItem(GT_ACCESS_TOKEN, token)
+    this._accessToken = token
+  }
+  
+  const loginLink = () => {
+    const githubOauthUrl = 'https://github.com/login/oauth/authorize'
+    const { clientID } = this.options
+    const query = {
+      client_id: clientID,
+      redirect_uri: window.location.href,
+      scope: 'public_repo'
+    }
+    return `${githubOauthUrl}?${queryStringify(query)}`
+  }
+
+  const isAdmin = (options, state) => {
+    return user && ~[].concat(admin).map(a => a.toLowerCase()).indexOf(user.login.toLowerCase())
+  }
+
+  const getInit = () => {
+    return this.getUserInfo().then(() => this.getIssue()).then(issue => this.getComments(issue))
+  }
+  const getUserInfo = () => {
+    if (!this.accessToken) {
+      return new Promise(resolve => {
+        resolve()
+      })
+    }
+    return axiosGithub.get('/user', {
+      headers: {
+        Authorization: `token ${this.accessToken}`
+      }
+    }).then(res => {
+      this.setState({ user: res.data })
+    }).catch(err => {
+      this.logout()
+    })
+  }
+  const getIssueById = () => {
+    const { owner, repo, number, clientID, clientSecret } = this.options
+    const getUrl = `/repos/${owner}/${repo}/issues/${number}`
+
+    return new Promise((resolve, reject) => {
+      axiosGithub.get(getUrl, {
+        auth: {
+          username: clientID,
+          password: clientSecret
+        },
+        params: {
+          t: Date.now()
+        }
+      })
+        .then(res => {
+          let issue = null
+
+          if (res && res.data && res.data.number === number) {
+            issue = res.data
+
+            this.setState({ issue, isNoInit: false })
+          }
+          resolve(issue)
+        })
+        .catch(err => {
+          // When the status code is 404, promise will be resolved with null
+          if (err.response.status === 404) resolve(null)
+          reject(err)
+        })
+    })
+  }
+  const getIssueByLabels = () => {
+    const { owner, repo, id, labels, clientID, clientSecret } = this.options
+
+    return axiosGithub.get(`/repos/${owner}/${repo}/issues`, {
+      auth: {
+        username: clientID,
+        password: clientSecret
+      },
+      params: {
+        labels: labels.concat(id).join(','),
+        t: Date.now()
+      }
+    }).then(res => {
+      const { createIssueManually } = this.options
+      let isNoInit = false
+      let issue = null
+      if (!(res && res.data && res.data.length)) {
+        if (!createIssueManually && this.isAdmin) {
+          return this.createIssue()
+        }
+
+        isNoInit = true
+      } else {
+        issue = res.data[0]
+      }
+      this.setState({ issue, isNoInit })
+      return issue
+    })
+  }
+
+  const getIssue = () => {
+    const { number } = this.options
+    const { issue } = this.state
+    if (issue) {
+      this.setState({ isNoInit: false })
+      return Promise.resolve(issue)
+    }
+
+    if (typeof number === 'number' && number > 0) {
+      return this.getIssueById().then(resIssue => {
+        if (!resIssue) return this.getIssueByLabels()
+        return resIssue
+      })
+    }
+    return this.getIssueByLabels()
+  }
+  const createIssue = () => {
+    const { owner, repo, title, body, id, labels, url } = this.options
+    return axiosGithub.post(`/repos/${owner}/${repo}/issues`, {
+      title,
+      labels: labels.concat(id),
+      body: body || `${url} \n\n ${
+        getMetaContent('description') ||
+        getMetaContent('description', 'og:description') || ''
+      }`
+    }, {
+      headers: {
+        Authorization: `token ${this.accessToken}`
+      }
+    }).then(res => {
+      this.setState({ issue: res.data })
+      return res.data
+    })
+  }
+  // Get comments via v3 api, don't require login, but sorting feature is disable
+  const getCommentsV3 = issue => {
+    const { clientID, clientSecret, perPage } = this.options
+    const { page } = this.state
+
+    return this.getIssue()
+      .then(issue => {
+        if (!issue) return
+
+        return axiosGithub.get(issue.comments_url, {
+          headers: {
+            Accept: 'application/vnd.github.v3.full+json'
+          },
+          auth: {
+            username: clientID,
+            password: clientSecret
+          },
+          params: {
+            per_page: perPage,
+            page
+          }
+        }).then(res => {
+          const { comments, issue } = this.state
+          let isLoadOver = false
+          const cs = comments.concat(res.data)
+          if (cs.length >= issue.comments || res.data.length < perPage) {
+            isLoadOver = true
+          }
+          this.setState({
+            comments: cs,
+            isLoadOver,
+            page: page + 1
+          })
+          return cs
+        })
+      })
+  }
+  const getComments = issue => {
+    if (!issue) return
+    // Get comments via v4 graphql api, login required and sorting feature is available
+    if (this.accessToken) return QLGetComments.call(this, issue)
+    return this.getCommentsV3(issue)
+  }
+
+  const createComment = () => {
+    const { comment, localComments, comments } = this.state
+
+    return this.getIssue()
+      .then(issue => axiosGithub.post(issue.comments_url, {
+        body: comment
+      }, {
+        headers: {
+          Accept: 'application/vnd.github.v3.full+json',
+          Authorization: `token ${this.accessToken}`
+        }
+      }))
+      .then(res => {
+        this.setState({
+          comment: '',
+          comments: comments.concat(res.data),
+          localComments: localComments.concat(res.data)
+        })
+      })
+  }
+  const logout = () => {
+    this.setState({ user: null })
+    window.localStorage.removeItem(GT_ACCESS_TOKEN)
+  }
+  
+  const getRef = e => {
+    this.publicBtnEL = e
+  }
+  const reply = replyComment => () => {
+    const { comment } = this.state
+    const replyCommentBody = replyComment.body
+    let replyCommentArray = replyCommentBody.split('\n')
+    replyCommentArray.unshift(`@${replyComment.user.login}`)
+    replyCommentArray = replyCommentArray.map(t => `> ${t}`)
+    replyCommentArray.push('')
+    replyCommentArray.push('')
+    if (comment) replyCommentArray.unshift('')
+    this.setState({ comment: comment + replyCommentArray.join('\n') }, () => {
+      autosize.update(this.commentEL)
+      this.commentEL.focus()
+    })
+  }
+  const like = (comment) => {
+    const { owner, repo } = this.options
+    const { user } = this.state
+    let { comments } = this.state
+
+    axiosGithub.post(`/repos/${owner}/${repo}/issues/comments/${comment.id}/reactions`, {
+      content: 'heart'
+    }, {
+      headers: {
+        Authorization: `token ${this.accessToken}`,
+        Accept: 'application/vnd.github.squirrel-girl-preview'
+      }
+    }).then(res => {
+      comments = comments.map(c => {
+        if (c.id === comment.id) {
+          if (c.reactions) {
+            if (!~c.reactions.nodes.findIndex(n => n.user.login === user.login)) {
+              c.reactions.totalCount += 1
+            }
+          } else {
+            c.reactions = { nodes: [] }
+            c.reactions.totalCount = 1
+          }
+
+          c.reactions.nodes.push(res.data)
+          c.reactions.viewerHasReacted = true
+        }
+        return c
+      })
+
+      this.setState({
+        comments
+      })
+    })
+  }
+  const unLike = (comment) => {
+    const { user } = this.state
+    let { comments } = this.state
+
+    const getQL = id => ({
+      operationName: 'RemoveReaction',
+      query: `
+          mutation RemoveReaction{
+            removeReaction (input:{
+              subjectId: "${id}",
+              content: HEART
+            }) {
+              reaction {
+                content
+              }
+            }
+          }
+        `
+    })
+
+    axiosGithub.post('/graphql', getQL(comment.gId), {
+      headers: {
+        Authorization: `bearer ${this.accessToken}`
+      }
+    }).then(res => {
+      if (res.data) {
+        comments = comments.map(c => {
+          if (c.id === comment.id) {
+            const index = c.reactions.nodes.findIndex(n => n.user.login === user.login)
+            if (~index) {
+              c.reactions.totalCount -= 1
+              c.reactions.nodes.splice(index, 1)
+            }
+            c.reactions.viewerHasReacted = false
+          }
+          return c
+        })
+
+        this.setState({
+          comments
+        })
+      }
+    })
+  }
+
+
+  const handlePopup = e => {
+    e.preventDefault()
+    e.stopPropagation()
+    const isVisible = !this.state.isPopupVisible
+    const hideHandle = e1 => {
+      if (hasClassInParent(e1.target, 'gt-user', 'gt-popup')) {
+        return
+      }
+      window.document.removeEventListener('click', hideHandle)
+      this.setState({ isPopupVisible: false })
+    }
+    this.setState({ isPopupVisible: isVisible })
+    if (isVisible) {
+      window.document.addEventListener('click', hideHandle)
+    } else {
+      window.document.removeEventListener('click', hideHandle)
+    }
+  }
+  const handleLogin = () => {
+    const { comment } = this.state
+    window.localStorage.setItem(GT_COMMENT, encodeURIComponent(comment))
+    window.location.href = this.loginLink
+  }
+  const handleIssueCreate = () => {
+    this.setState({ isIssueCreating: true })
+    this.createIssue().then(issue => {
+      this.setState({
+        isIssueCreating: false,
+        isOccurError: false
+      })
+      return this.getComments(issue)
+    }).catch(err => {
+      this.setState({
+        isIssueCreating: false,
+        isOccurError: true,
+        errorMsg: formatErrorMsg(err)
+      })
+    }).then(res => {
+      if (res) {
+        this.setState({
+          isNoInit: false,
+        })
+      }
+    })
+  }
+  const handleCommentCreate = e => {
+    if (!this.state.comment.length) {
+      e && e.preventDefault()
+      this.commentEL.focus()
+      return
+    }
+    this.setState(state => {
+      if (state.isCreating) return
+
+      this.createComment()
+        .then(() => this.setState({
+          isCreating: false,
+          isOccurError: false
+        }))
+        .catch(err => {
+          this.setState({
+            isCreating: false,
+            isOccurError: true,
+            errorMsg: formatErrorMsg(err)
+          })
+        })
+      return { isCreating: true }
+    })
+  }
+  const handleCommentPreview = e => {
+    this.setState({
+      isPreview: !this.state.isPreview
+    })
+
+    axiosGithub.post('/markdown', {
+      text: this.state.comment
+    }, {
+      headers: this.accessToken && { Authorization: `token ${this.accessToken}` }
+    }).then(res => {
+      this.setState({
+        previewHtml: res.data
+      })
+    }).catch(err => {
+      this.setState({
+        isOccurError: true,
+        errorMsg: formatErrorMsg(err)
+      })
+    })
+  }
+  const handleCommentLoad = () => {
+    const { issue, isLoadMore } = this.state
+    if (isLoadMore) return
+    this.setState({ isLoadMore: true })
+    this.getComments(issue).then(() => this.setState({ isLoadMore: false }))
+  }
+  const handleCommentChange = e => this.setState({ comment: e.target.value })
+  const handleLogout = () => {
+    this.logout()
+    window.location.reload()
+  }
+  const handleCommentFocus = e => {
+    const { distractionFreeMode } = this.options
+    if (!distractionFreeMode) return e.preventDefault()
+    this.setState({ isInputFocused: true })
+  }
+  const handleCommentBlur = e => {
+    const { distractionFreeMode } = this.options
+    if (!distractionFreeMode) return e.preventDefault()
+    this.setState({ isInputFocused: false })
+  }
+  const handleSort = direction => e => {
+    this.setState({ pagerDirection: direction })
+  }
+  const handleCommentKeyDown = e => {
+    const { enableHotKey } = this.options
+    if (enableHotKey && (e.metaKey || e.ctrlKey) && e.keyCode === 13) {
+      this.publicBtnEL && this.publicBtnEL.focus()
+      this.handleCommentCreate()
+    }
+  }
+  
+</script>
